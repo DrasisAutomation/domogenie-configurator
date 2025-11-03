@@ -529,6 +529,23 @@
                 transform: scale(0.6);
             }
         }
+
+        /* Fix for 2.5 special fan alignment in saved/preview view */
+        .section.two-point-five-special {
+            position: relative !important;
+            /* ensure anchor for absolute child */
+        }
+
+        .section.two-point-five-special .center-plus {
+            position: absolute;
+            right: 5%;
+            top: 50%;
+            transform: translate(-125%, -50%);
+        }
+
+        .section.two-point-five-special .plus.arrow-bottom img {
+            transform: scaleY(-1);
+        }
     </style>
 </head>
 
@@ -608,6 +625,19 @@
                     const innerPreview = tempDiv.querySelector('.model-box');
                     if (innerPreview) {
                         previewBox.innerHTML = innerPreview.innerHTML;
+                        // Fix: Flip bottom arrows for 2.5-special layouts
+                        const twoPointFiveSpecials = previewBox.querySelectorAll('.section.two-point-five-special');
+                        twoPointFiveSpecials.forEach(section => {
+                            const bottomArrows = section.querySelectorAll('.plus[data-index="9"], .arrow-bottom img');
+                            bottomArrows.forEach(img => {
+                                if (img.tagName === "IMG") {
+                                    img.style.transform = "scaleY(-1)";
+                                } else if (img.querySelector("img")) {
+                                    img.querySelector("img").style.transform = "scaleY(-1)";
+                                }
+                            });
+                        });
+
 
                         const imageSections = previewBox.querySelectorAll('.section.image');
                         imageSections.forEach(section => {
