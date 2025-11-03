@@ -546,6 +546,49 @@
         .section.two-point-five-special .plus.arrow-bottom img {
             transform: scaleY(-1);
         }
+/* ✅ Final fix for 2.5 special layout alignment and width expansion */
+:root {
+    --section-size: 120px;
+}
+
+.section.two-point-five-special {
+    position: relative !important;
+    width: calc(var(--section-size) * 3.0) !important;
+    min-width: calc(var(--section-size) * 3.0) !important;
+    max-width: calc(var(--section-size) * 3.0) !important;
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 6px;
+    padding: 6px;
+    box-sizing: border-box;
+}
+
+/* Center element offset fix */
+.section.two-point-five-special .center-plus {
+    position: absolute;
+    right: 5%;
+    top: 50%;
+    transform: translate(-125%, -50%);
+}
+
+/* Flip bottom arrow */
+.section.two-point-five-special .plus.arrow-bottom img {
+    transform: scaleY(-1);
+}
+.section.two-point-five {
+    position: relative !important;
+    width: calc(var(--section-size) * 3.2) !important;
+    min-width: calc(var(--section-size) * 3.2) !important;
+    max-width: calc(var(--section-size) * 3.2) !important;
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 6px;
+    padding: 6px;
+    box-sizing: border-box;
+}
+
     </style>
 </head>
 
@@ -638,6 +681,16 @@
                             });
                         });
 
+                        // Ensure all empty sections have visible backgrounds
+                        const allSections = previewBox.querySelectorAll('.section');
+                        allSections.forEach(section => {
+                            // If the section is empty (no child icons/images), fill with neutral background
+                            if (!section.innerHTML.trim()) {
+                                section.style.minHeight = "120px";
+                                section.style.minWidth = "100px";
+                                section.textContent = ''; // keep it clean
+                            }
+                        });
 
                         const imageSections = previewBox.querySelectorAll('.section.image');
                         imageSections.forEach(section => {

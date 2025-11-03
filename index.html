@@ -2185,28 +2185,28 @@
 
 
 
-        // // Lumi Configurator - Page Access Guard
-        // document.addEventListener("DOMContentLoaded", () => {
-        //     const isAuthenticated = sessionStorage.getItem("lumi_authenticated");
-        //     const userData = sessionStorage.getItem("lumi_user");
+        // Lumi Configurator - Page Access Guard
+        document.addEventListener("DOMContentLoaded", () => {
+            const isAuthenticated = sessionStorage.getItem("lumi_authenticated");
+            const userData = sessionStorage.getItem("lumi_user");
 
-        //     // If not logged in, redirect to login
-        //     if (!isAuthenticated || !userData) {
-        //         alert("⚠️ Please sign in to access this page.");
-        //         window.location.href = "login.html";
-        //         return;
-        //     }
+            // If not logged in, redirect to login
+            if (!isAuthenticated || !userData) {
+                alert("⚠️ Please sign in to access this page.");
+                window.location.href = "login.html";
+                return;
+            }
 
-        //     // Optional: auto sign-out after session expires (15 minutes)
-        //     const sessionTimeout = 15 * 60 * 1000; // 15 minutes
-        //     const sessionStart = JSON.parse(sessionStorage.getItem("lumi_user")).timestamp || Date.now();
+            // Optional: auto sign-out after session expires (15 minutes)
+            const sessionTimeout = 15 * 60 * 1000; // 15 minutes
+            const sessionStart = JSON.parse(sessionStorage.getItem("lumi_user")).timestamp || Date.now();
 
-        //     if (Date.now() - sessionStart > sessionTimeout) {
-        //         sessionStorage.clear();
-        //         alert("Your session expired. Please log in again.");
-        //         window.location.href = "login.html";
-        //     }
-        // });
+            if (Date.now() - sessionStart > sessionTimeout) {
+                sessionStorage.clear();
+                alert("Your session expired. Please log in again.");
+                window.location.href = "login.html";
+            }
+        });
 
 
     </script>
