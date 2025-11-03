@@ -1038,7 +1038,7 @@
 
             .thumb {
                 width: 55px;
-                height: 40px;
+                height: 55px;
             }
         }
 
@@ -1167,6 +1167,15 @@
             flex: 1;
             min-width: var(--section-size);
         }
+        /* Fix: center image alignment only for 2.5 special center fan */
+.section.two-point-five-special .center-plus img {
+    display: block;
+    margin: 0 auto;
+    position: relative;
+    left: 50%;
+    transform: translateX(50%) !important;
+}
+
     </style>
 </head>
 
@@ -1870,7 +1879,14 @@
                     const p = document.createElement('div');
                     p.className = 'plus';
                     p.id = pid;
-                    p.dataset.type = 'common';
+
+                    // ✅ Only two-point-five-special gets arrows in 1st-row-5th (4) and 2nd-row-5th (9)
+                    if (type === 'two-point-five-special' && (i === 4 || i === 9)) {
+                        p.dataset.type = 'arrow';
+                    } else {
+                        p.dataset.type = 'common';
+                    }
+
                     p.dataset.index = i;
                     p.dataset.position = i;
 
@@ -1879,11 +1895,17 @@
                         p.classList.add('selected');
                         p.style.padding = '0';
                         p.innerHTML = `<img src="${selectedIcons[key]}" alt="Selected Icon">`;
+                        if (p.dataset.type === 'arrow' && i === 9) {
+                            const img = p.querySelector('img');
+                            if (img) img.style.transform = 'scaleY(-1)';
+                        }
                     } else {
                         p.textContent = '+';
                     }
+
                     s.appendChild(p);
                 }
+
 
                 if (type === 'two-point-five-special') {
                     const centerBtn = document.createElement('div');
@@ -2035,22 +2057,49 @@
             const col = parseInt(section.dataset.col || 0, 10);
             const typeClass = section.className.split(' ').slice(-1)[0];
 
+            // --- Only for 2.5-special ---
+            if (typeClass === 'two-point-five-special') {
+                const allPluses = [...section.querySelectorAll('.plus[data-type="arrow"]')];
+                const top = allPluses.find(p => p.dataset.index === '4');
+                const bottom = allPluses.find(p => p.dataset.index === '9');
+
+                if (top) {
+                    top.classList.add('selected', 'arrow-top');
+                    top.style.padding = '0';
+                    top.innerHTML = `<img src="${imageUrl}" alt="Arrow Icon" style="transform:none;">`;
+                    const topKey = buildKey(selectedModel, selectedVariantIndex, row, col, typeClass, 4);
+                    selectedIcons[topKey] = imageUrl;
+                }
+
+                if (bottom) {
+                    bottom.classList.add('selected', 'arrow-bottom');
+                    bottom.style.padding = '0';
+                    bottom.innerHTML = `<img src="${imageUrl}" alt="Arrow Icon" style="transform:scaleY(-1);">`;
+                    const bottomKey = buildKey(selectedModel, selectedVariantIndex, row, col, typeClass, 9);
+                    selectedIcons[bottomKey] = imageUrl;
+                }
+
+                return; // stop here — only applies to 2.5 special
+            }
+
+            // --- Default arrow sync (special, light-special) ---
             const topArrow = section.querySelector('.plus[data-position="tr"]');
             const bottomArrow = section.querySelector('.plus[data-position="br"]');
-
-            if (topArrow) {
-                topArrow.classList.add('selected', 'arrow-top');
-                topArrow.style.padding = '0';
-                topArrow.innerHTML = `<img src="${imageUrl}" alt="Arrow Icon" style="transform: none;">`;
-                const topKey = buildKey(selectedModel, selectedVariantIndex, row, col, typeClass, 'tr');
-                selectedIcons[topKey] = imageUrl;
-            }
-            if (bottomArrow) {
-                bottomArrow.classList.add('selected', 'arrow-bottom');
-                bottomArrow.style.padding = '0';
-                bottomArrow.innerHTML = `<img src="${imageUrl}" alt="Arrow Icon" style="transform: scaleY(-1);">`;
-                const bottomKey = buildKey(selectedModel, selectedVariantIndex, row, col, typeClass, 'br');
-                selectedIcons[bottomKey] = imageUrl;
+            if (topArrow || bottomArrow) {
+                if (topArrow) {
+                    topArrow.classList.add('selected', 'arrow-top');
+                    topArrow.style.padding = '0';
+                    topArrow.innerHTML = `<img src="${imageUrl}" alt="Arrow Icon" style="transform:none;">`;
+                    const topKey = buildKey(selectedModel, selectedVariantIndex, row, col, typeClass, 'tr');
+                    selectedIcons[topKey] = imageUrl;
+                }
+                if (bottomArrow) {
+                    bottomArrow.classList.add('selected', 'arrow-bottom');
+                    bottomArrow.style.padding = '0';
+                    bottomArrow.innerHTML = `<img src="${imageUrl}" alt="Arrow Icon" style="transform:scaleY(-1);">`;
+                    const bottomKey = buildKey(selectedModel, selectedVariantIndex, row, col, typeClass, 'br');
+                    selectedIcons[bottomKey] = imageUrl;
+                }
             }
         }
 
@@ -2136,28 +2185,28 @@
 
 
 
-        // Lumi Configurator - Page Access Guard
-        document.addEventListener("DOMContentLoaded", () => {
-            const isAuthenticated = sessionStorage.getItem("lumi_authenticated");
-            const userData = sessionStorage.getItem("lumi_user");
+        // // Lumi Configurator - Page Access Guard
+        // document.addEventListener("DOMContentLoaded", () => {
+        //     const isAuthenticated = sessionStorage.getItem("lumi_authenticated");
+        //     const userData = sessionStorage.getItem("lumi_user");
 
-            // If not logged in, redirect to login
-            if (!isAuthenticated || !userData) {
-                alert("⚠️ Please sign in to access this page.");
-                window.location.href = "login.html";
-                return;
-            }
+        //     // If not logged in, redirect to login
+        //     if (!isAuthenticated || !userData) {
+        //         alert("⚠️ Please sign in to access this page.");
+        //         window.location.href = "login.html";
+        //         return;
+        //     }
 
-            // Optional: auto sign-out after session expires (15 minutes)
-            const sessionTimeout = 15 * 60 * 1000; // 15 minutes
-            const sessionStart = JSON.parse(sessionStorage.getItem("lumi_user")).timestamp || Date.now();
+        //     // Optional: auto sign-out after session expires (15 minutes)
+        //     const sessionTimeout = 15 * 60 * 1000; // 15 minutes
+        //     const sessionStart = JSON.parse(sessionStorage.getItem("lumi_user")).timestamp || Date.now();
 
-            if (Date.now() - sessionStart > sessionTimeout) {
-                sessionStorage.clear();
-                alert("Your session expired. Please log in again.");
-                window.location.href = "login.html";
-            }
-        });
+        //     if (Date.now() - sessionStart > sessionTimeout) {
+        //         sessionStorage.clear();
+        //         alert("Your session expired. Please log in again.");
+        //         window.location.href = "login.html";
+        //     }
+        // });
 
 
     </script>
