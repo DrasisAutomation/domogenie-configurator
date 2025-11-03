@@ -1402,48 +1402,48 @@
             '2': {
                 ratio: '1-1',
                 variants: [
-                    { id: '2-t1', label: 'Type 1', layout: [['normal']] },
-                    { id: '2-t2', label: 'Type 2', layout: [['half']] },
-                    { id: '2-fan', label: 'Switch + Fan', layout: [['special']] },
-                    { id: '2-light', label: 'Switch + Light', layout: [['light-special']] }
+                    { id: '2-t1', label: '4 Lights', layout: [['normal']] },
+                    { id: '2-t2', label: '2 Lights', layout: [['half']] },
+                    { id: '2-fan', label: '2 Lights + 1 Fan', layout: [['special']] },
+                    { id: '2-light', label: '2 Lights + 1 Dimmer', layout: [['light-special']] }
                 ]
             },
             '4': {
                 ratio: '2-1',
                 variants: [
-                    { id: '4-t1', label: 'Type 1', layout: [['normal', 'normal']] },
-                    { id: '4-t2', label: 'Type 2', layout: [['normal', 'image']] },
-                    { id: '4-t3', label: 'Type 3', layout: [['normal', 'special']] },
-                    { id: '4-t4', label: 'Type 4', layout: [['special', 'image']] }
+                    { id: '4-t1', label: '8 lights', layout: [['normal', 'normal']] },
+                    { id: '4-t2', label: '4 lights + 1 socket', layout: [['normal', 'image']] },
+                    { id: '4-t3', label: '6 lights + 1 fan', layout: [['normal', 'special']] },
+                    { id: '4-t4', label: '2 lights + 1 Fan + 1 socket', layout: [['special', 'image']] }
                 ]
             },
             '6': {
                 ratio: '3-1',
                 variants: [
-                    { id: '6-t1', label: 'Type 1', layout: [['normal', 'normal', 'image']] },
-                    { id: '6-t2', label: 'Type 2', layout: [['image', 'normal', 'image']] }
+                    { id: '6-t1', label: '8 lights + 1 socket', layout: [['normal', 'normal', 'image']] },
+                    { id: '6-t2', label: '4 lights + 2 sockets', layout: [['image', 'normal', 'image']] }
                 ]
             },
             '8': {
                 ratio: '3-1',
                 variants: [
-                    { id: '8-t1', label: 'Type 1', layout: [['two-point-five', 'image']] },
-                    { id: '8-t3', label: 'Type 3', layout: [['special', 'normal', 'image']] }
+                    { id: '8-t1', label: '10 lights + 1 socket', layout: [['two-point-five', 'image']] },
+                    { id: '8-t3', label: '6 lights + 1 fan + 1 socket', layout: [['special', 'normal', 'image']] }
                 ]
             },
             "6&8": {
                 ratio: "3-1",
                 variants: [
-                    { id: "6&8-t1", label: "Type 1", layout: [["normal", "normal", "normal"]] },
-                    { id: "6&8-t2", label: "Type 2", layout: [["normal", "normal", "normal"]] }
+                    { id: "6&8-t1", label: "12 lights", layout: [["normal", "normal", "normal"]] },
+                    { id: "6&8-t2", label: "1 High Power + 11 Lights", layout: [["normal", "normal", "normal"]] }
                 ]
             },
             '12': {
                 ratio: '3-2',
                 variants: [
-                    { id: '12-t1', label: 'Type 1', layout: [['two-point-five'], ['image', 'blank', 'image']] },
-                    { id: '12-t2', label: 'Type 2', layout: [['two-point-five'], ['image', 'normal', 'image']] },
-                    { id: '12-t3', label: 'Type 3', layout: [['two-point-five-special'], ['image', 'blank', 'image']] }
+                    { id: '12-t1', label: '10 lights + 2 Sockets', layout: [['two-point-five'], ['image', 'blank', 'image']] },
+                    { id: '12-t2', label: '14 lights + 2 Sockets', layout: [['two-point-five'], ['image', 'normal', 'image']] },
+                    { id: '12-t3', label: '8 lights + 1 fan + 2 Sockets', layout: [['two-point-five-special'], ['image', 'blank', 'image']] }
                 ]
             }
         };
@@ -1458,7 +1458,7 @@
         /* ======= STATE ======= */
         let SECTION_COUNTER = 0;
         let PLUS_COUNTER = 0;
-        let selectedModel = '8';
+        let selectedModel = '2';
         let selectedVariantIndex = 0;
         let currentStep = 1;
         let currentPlusElement = null;
@@ -1854,7 +1854,7 @@
 
             // image: background socket
             else if (type === 'image') {
-                if (selectedModel === '4' && selectedVariantIndex === 1) {
+                if (selectedModel === '4' && (selectedVariantIndex === 1 || selectedVariantIndex === 3)) {
                     s.style.backgroundImage = `url('./assets/sockets/2.png')`;
                 } else {
                     s.style.backgroundImage = `url('./assets/sockets/1.png')`;
@@ -2137,39 +2137,39 @@
 
 
         // Lumi Configurator - Page Access Guard
-document.addEventListener("DOMContentLoaded", () => {
-    const isAuthenticated = sessionStorage.getItem("lumi_authenticated");
-    const userData = sessionStorage.getItem("lumi_user");
+        document.addEventListener("DOMContentLoaded", () => {
+            const isAuthenticated = sessionStorage.getItem("lumi_authenticated");
+            const userData = sessionStorage.getItem("lumi_user");
 
-    // If not logged in, redirect to login
-    if (!isAuthenticated || !userData) {
-        alert("⚠️ Please sign in to access this page.");
-        window.location.href = "login.html";
-        return;
-    }
+            // If not logged in, redirect to login
+            if (!isAuthenticated || !userData) {
+                alert("⚠️ Please sign in to access this page.");
+                window.location.href = "login.html";
+                return;
+            }
 
-    // Optional: auto sign-out after session expires (15 minutes)
-    const sessionTimeout = 15 * 60 * 1000; // 15 minutes
-    const sessionStart = JSON.parse(sessionStorage.getItem("lumi_user")).timestamp || Date.now();
+            // Optional: auto sign-out after session expires (15 minutes)
+            const sessionTimeout = 15 * 60 * 1000; // 15 minutes
+            const sessionStart = JSON.parse(sessionStorage.getItem("lumi_user")).timestamp || Date.now();
 
-    if (Date.now() - sessionStart > sessionTimeout) {
-        sessionStorage.clear();
-        alert("Your session expired. Please log in again.");
-        window.location.href = "login.html";
-    }
-});
+            if (Date.now() - sessionStart > sessionTimeout) {
+                sessionStorage.clear();
+                alert("Your session expired. Please log in again.");
+                window.location.href = "login.html";
+            }
+        });
 
 
     </script>
     <script>
-document.getElementById("logout-btn").addEventListener("click", () => {
-    sessionStorage.clear();
-    localStorage.removeItem("lumi_authenticated");
-    localStorage.removeItem("lumi_user");
-    alert("You have been logged out successfully.");
-    window.location.href = "login.html";
-});
-</script>
+        document.getElementById("logout-btn").addEventListener("click", () => {
+            sessionStorage.clear();
+            localStorage.removeItem("lumi_authenticated");
+            localStorage.removeItem("lumi_user");
+            alert("You have been logged out successfully.");
+            window.location.href = "login.html";
+        });
+    </script>
 
 </body>
 
