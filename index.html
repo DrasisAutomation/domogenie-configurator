@@ -8,6 +8,105 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Label Input Modal */
+.label-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 20px;
+}
+
+.label-modal-content {
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.label-modal h3 {
+    margin: 0 0 20px 0;
+    color: var(--text-primary);
+    text-align: center;
+    font-size: 20px;
+}
+
+.label-input-group {
+    margin-bottom: 25px;
+}
+
+.label-input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.label-input {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+    font-size: 16px;
+    transition: var(--transition);
+    box-sizing: border-box;
+}
+
+.label-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(42, 91, 215, 0.1);
+}
+
+.label-input::placeholder {
+    color: #a0aec0;
+}
+
+.label-modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.label-modal-btn {
+    padding: 10px 24px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.label-modal-btn.cancel {
+    background: #e2e8f0;
+    color: #4a5568;
+}
+
+.label-modal-btn.cancel:hover {
+    background: #cbd5e0;
+}
+
+.label-modal-btn.save {
+    background: var(--primary);
+    color: white;
+}
+
+.label-modal-btn.save:hover {
+    background: var(--primary-dark);
+}
+
+.label-modal-btn.save:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
         :root {
             --gap: 10px;
             --section-size: 160px;
@@ -1404,7 +1503,26 @@
             </div>
         </div>
     </div>
-
+<!-- Label Input Modal -->
+<!-- Label Input Modal -->
+<div class="modal-overlay label-modal" id="labelModal" style="display: none;">
+    <div class="modal-content label-modal-content">
+        <h3>Save Your Design</h3>
+        <div class="label-input-group">
+            <label for="switchLabel">Enter a name for your design:</label>
+            <input type="text" id="switchLabel" class="label-input" 
+                   placeholder="e.g., Living Room Switch, Bedroom Panel" 
+                   maxlength="50">
+            <div style="font-size: 14px; color: var(--text-muted); margin-top: 8px;">
+                Maximum 50 characters. This will help you identify your design later.
+            </div>
+        </div>
+        <div class="label-modal-buttons">
+            <button class="label-modal-btn cancel" onclick="closeLabelModal()">Cancel</button>
+            <button class="label-modal-btn save" onclick="saveDesignWithLabel()" id="confirmSaveBtn">Save Design</button>
+        </div>
+    </div>
+</div>
     <script>
         /* ======= CONFIG / DATA ======= */
         const MODELS = {
@@ -1489,6 +1607,8 @@
         /* ======= STATE ======= */
         let SECTION_COUNTER = 0;
         let PLUS_COUNTER = 0;
+        let isLabelModalOpen = false;
+
         let selectedModel = '2';
         let selectedVariantIndex = 0;
         if (sessionStorage.getItem('domogenie_editDesignData')) {
@@ -1510,13 +1630,22 @@
         let editDesignData = null;
 
 
-        function applyEditDesign() {
+function applyEditDesign() {
     const editData = sessionStorage.getItem('domogenie_editDesignData');
     if (!editData) return;
 
     const d = JSON.parse(editData);
 
+    // Check if this is actually an edit session
+    const isEditSession = sessionStorage.getItem('domogenie_isEditSession') === 'true';
+    if (!isEditSession) {
+        // Clear edit data if not in edit session
+        sessionStorage.removeItem('domogenie_editDesignData');
+        return;
+    }
+
     isEditMode = true;
+    editDesignData = d;
 
     // 1️⃣ Select model (this creates variants & preview)
     selectModel(d.selectedModel);
@@ -1525,6 +1654,7 @@
     setTimeout(() => {
         const thumbs = document.querySelectorAll('.thumb');
         if (thumbs[d.selectedVariantIndex]) {
+            // Use click to properly select the variant
             thumbs[d.selectedVariantIndex].click();
         }
 
@@ -1534,12 +1664,22 @@
         // 4️⃣ Re-render preview with icons
         renderVariantPreview();
 
-        // 5️⃣ Go to Step 2
+        // 5️⃣ Apply saved icons to preview
+        applySavedIconsToPreview();
+        
+        // 6️⃣ Go to Step 2 WITHOUT triggering save
         navigateToStep(2);
-    }, 0);
+        
+        // Clear edit session flag after applying
+        sessionStorage.removeItem('domogenie_isEditSession');
+        
+        // IMPORTANT: Update the page title for edit mode
+        const titleElement = document.querySelector('h1');
+        if (titleElement && d.designLabel) {
+            titleElement.innerHTML = `Edit Design: <span style="color: var(--primary);">${d.designLabel}</span>`;
+        }
+    }, 100); // Slightly longer delay to ensure thumbs are rendered
 }
-
-
         function nextSectionId(modelId) {
             SECTION_COUNTER++;
             return `sec-${modelId}-${SECTION_COUNTER}`;
@@ -1557,6 +1697,15 @@
 
         /* ======= INIT ======= */
         document.addEventListener('DOMContentLoaded', () => {
+                const switchLabelInput = document.getElementById('switchLabel');
+    if (switchLabelInput) {
+        switchLabelInput.addEventListener('input', updateSaveButtonState);
+        switchLabelInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !document.getElementById('confirmSaveBtn').disabled) {
+                saveDesignWithLabel();
+            }
+        });
+    }
             // Check for edit mode
 
             initializeModelSelection();
@@ -2428,63 +2577,110 @@ function selectModel(m) {
         }
 
         /* ======= SAVE DESIGN FUNCTIONALITY ======= */
-        function saveDesign() {
-            // Ask for design name if not in edit mode
-            let designLabel = '';
+function saveDesign() {
+    // Open label modal instead of directly saving
+    openLabelModal();
+}function openLabelModal() {
+    const labelModal = document.getElementById('labelModal');
+    const switchLabelInput = document.getElementById('switchLabel');
+    
+    // Set default label based on edit mode or new design
+    if (isEditMode && editDesignData) {
+        switchLabelInput.value = editDesignData.designLabel || '';
+    } else {
+        switchLabelInput.value = `Design ${new Date().toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        })}`;
+    }
+    
+    labelModal.style.display = 'flex';
+    switchLabelInput.focus();
+    switchLabelInput.select();
+    
+    // Enable/disable save button based on input
+    updateSaveButtonState();
+}
 
-            if (!isEditMode) {
-                designLabel = prompt('Enter a name for your design:', `Design ${new Date().toLocaleString()}`);
-                if (designLabel === null) return; // User cancelled
-            } else {
-                designLabel = editDesignData.designLabel || `Edited Design ${new Date().toLocaleString()}`;
-            }
+function closeLabelModal() {
+    document.getElementById('labelModal').style.display = 'none';
+}
 
-            const designData = {
-                id: isEditMode ? editDesignData.id : 'domogenie_design_' + Date.now(),
-                selectedModel: selectedModel,
-                selectedVariantIndex: selectedVariantIndex,
-                selectedVariantName: MODELS[selectedModel].variants[selectedVariantIndex].label,
-                selectedGlassColor: selectedGlassColor,
-                selectedFrameColor: selectedFrameColor,
-                selectedIcons: { ...selectedIcons },
-                designLabel: designLabel,
-                timestamp: new Date().toISOString(),
-                fileName: getFormattedDateTime(),
-                previewHTML: document.getElementById('finalPreview').outerHTML
-            };
+function updateSaveButtonState() {
+    const switchLabel = document.getElementById('switchLabel').value.trim();
+    const saveBtn = document.getElementById('confirmSaveBtn');
+    
+    if (switchLabel.length === 0 || switchLabel.length > 50) {
+        saveBtn.disabled = true;
+    } else {
+        saveBtn.disabled = false;
+    }
+}
 
-            // Save to localStorage
-            let designs = JSON.parse(localStorage.getItem('domogenieDesigns') || '[]');
+function saveDesignWithLabel() {
+    const switchLabel = document.getElementById('switchLabel').value.trim();
+    
+    // Validate label
+    if (switchLabel.length === 0) {
+        alert('Please enter a name for your design.');
+        return;
+    }
+    
+    if (switchLabel.length > 50) {
+        alert('Design name must be 50 characters or less.');
+        return;
+    }
+    
+    const designData = {
+        id: isEditMode ? editDesignData.id : 'domogenie_design_' + Date.now(),
+        selectedModel: selectedModel,
+        selectedVariantIndex: selectedVariantIndex,
+        selectedVariantName: MODELS[selectedModel].variants[selectedVariantIndex].label,
+        selectedGlassColor: selectedGlassColor,
+        selectedFrameColor: selectedFrameColor,
+        selectedIcons: { ...selectedIcons },
+        designLabel: switchLabel, // Store the label entered by user
+        timestamp: new Date().toISOString(),
+        fileName: getFormattedDateTime(),
+        previewHTML: document.getElementById('finalPreview').outerHTML
+    };
 
-            if (isEditMode) {
-                // Update existing design
-                const index = designs.findIndex(d => d.id === editDesignData.id);
-                if (index !== -1) {
-                    designs[index] = designData;
-                    alert('✅ Design updated successfully!');
-                } else {
-                    designs.push(designData);
-                    alert('✅ Design saved as new!');
-                }
-            } else {
-                // Add new design
-                designs.push(designData);
-                alert('✅ Design saved successfully!');
-            }
+    // Save to localStorage
+    let designs = JSON.parse(localStorage.getItem('domogenieDesigns') || '[]');
 
-            localStorage.setItem('domogenieDesigns', JSON.stringify(designs));
-
-            // Clear edit mode and redirect
-            if (isEditMode) {
-                sessionStorage.removeItem('domogenie_editDesignData');
-            }
-
-            // Redirect to designs page
-            setTimeout(() => {
-                window.location.href = 'domogenie-designs.html';
-            }, 1000);
+    if (isEditMode) {
+        // Update existing design
+        const index = designs.findIndex(d => d.id === editDesignData.id);
+        if (index !== -1) {
+            designs[index] = designData;
+            alert('✅ Design updated successfully!');
+        } else {
+            designs.push(designData);
+            alert('✅ Design saved as new!');
         }
+    } else {
+        // Add new design
+        designs.push(designData);
+        alert('✅ Design saved successfully!');
+    }
 
+    localStorage.setItem('domogenieDesigns', JSON.stringify(designs));
+
+    // Clear edit mode and redirect
+    if (isEditMode) {
+        sessionStorage.removeItem('domogenie_editDesignData');
+    }
+
+    // Close modal and redirect
+    closeLabelModal();
+    
+    // Redirect to designs page
+    setTimeout(() => {
+        window.location.href = 'domogenie-designs.html';
+    }, 1000);
+}
         function getFormattedDateTime() {
             const now = new Date();
             const day = String(now.getDate()).padStart(2, '0');

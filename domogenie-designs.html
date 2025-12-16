@@ -971,6 +971,8 @@
     <button id="print-btn" class="printAll">Print / Download All Designs</button>
 
     <script>
+
+        
         const designGrid = document.getElementById('designGrid');
         const designs = JSON.parse(localStorage.getItem('domogenieDesigns') || '[]');
 
@@ -988,7 +990,7 @@
                         <div class="watermark watermark-3">DG</div>
 
                         <div class="summary-preview">
-                            <h4>Final Preview</h4>
+                            <h4>${design.designLabel}</h4>
                             <div class="preview-container">
                                 <div class="preview-box" id="preview-${design.id}"></div>
                             </div>
@@ -1190,6 +1192,7 @@ function setupEditButtons() {
 }
 
 // Edit handler using array index (SAFE)
+// Edit handler using array index (SAFE)
 function editDesignByIndex(index) {
     const allDesigns = JSON.parse(localStorage.getItem('domogenieDesigns') || '[]');
     const designToEdit = allDesigns[index];
@@ -1204,11 +1207,13 @@ function editDesignByIndex(index) {
         'domogenie_editDesignData',
         JSON.stringify(designToEdit)
     );
+    
+    // Set a flag to indicate this is an active edit session
+    sessionStorage.setItem('domogenie_isEditSession', 'true');
 
     // Redirect to configurator
     window.location.href = 'index.html';
 }
-
 // Initialize edit buttons when page loads
 document.addEventListener('DOMContentLoaded', () => {
     // Wait until cards are rendered
