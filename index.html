@@ -1167,15 +1167,15 @@
             flex: 1;
             min-width: var(--section-size);
         }
-        /* Fix: center image alignment only for 2.5 special center fan */
-.section.two-point-five-special .center-plus img {
-    display: block;
-    margin: 0 auto;
-    position: relative;
-    left: 50%;
-    transform: translateX(50%) !important;
-}
 
+        /* Fix: center image alignment only for 2.5 special center fan */
+        .section.two-point-five-special .center-plus img {
+            display: block;
+            margin: 0 auto;
+            position: relative;
+            left: 50%;
+            transform: translateX(50%) !important;
+        }
     </style>
 </head>
 
@@ -1457,18 +1457,48 @@
             }
         };
 
-        // placeholder asset lists
-        const IMAGES = { common: [], arrow: [], fan: [], light: [] };
-        for (let i = 1; i <= 87; i++) IMAGES.common.push(`./assets/icons/${i}.png`);
-        for (let i = 1; i <= 15; i++) IMAGES.arrow.push(`./assets/arrow/${i}.png`);
-        for (let i = 1; i <= 10; i++) IMAGES.fan.push(`./assets/fan/${i}.png`);
-        for (let i = 1; i <= 10; i++) IMAGES.light.push(`./assets/light/${i}.png`);
+        // Image library paths - CORRECTED PATHS
+        const IMAGES = {
+            common: [],
+            arrow: [],
+            fan: [],
+            light: []
+        };
+
+        // Load common icons (87 icons)
+        for (let i = 1; i <= 87; i++) {
+            // Try multiple possible paths
+            IMAGES.common.push(`./assets/icons/${i}.png`);
+        }
+
+        // Load arrow icons (15 icons)
+        for (let i = 1; i <= 15; i++) {
+            IMAGES.arrow.push(`./assets/arrow/${i}.png`);
+        }
+
+        // Load fan icons (10 icons)
+        for (let i = 1; i <= 10; i++) {
+            IMAGES.fan.push(`./assets/fan/${i}.png`);
+        }
+
+        // Load light icons (10 icons)
+        for (let i = 1; i <= 10; i++) {
+            IMAGES.light.push(`./assets/light/${i}.png`);
+        }
 
         /* ======= STATE ======= */
         let SECTION_COUNTER = 0;
         let PLUS_COUNTER = 0;
         let selectedModel = '2';
         let selectedVariantIndex = 0;
+        if (sessionStorage.getItem('domogenie_editDesignData')) {
+    const d = JSON.parse(sessionStorage.getItem('domogenie_editDesignData'));
+    selectedModel = d.selectedModel;
+   selectedVariantIndex = Number.isInteger(d.selectedVariantIndex)
+    ? d.selectedVariantIndex
+    : 0;
+
+}
         let currentStep = 1;
         let currentPlusElement = null;
         let selectedImageUrl = null;
@@ -1476,9 +1506,49 @@
         let selectedIcons = {};
         let selectedGlassColor = 'white';
         let selectedFrameColor = 'black';
+        let isEditMode = false;
+        let editDesignData = null;
 
-        function nextSectionId(modelId) { SECTION_COUNTER++; return `sec-${modelId}-${SECTION_COUNTER}`; }
-        function nextPlusId() { PLUS_COUNTER++; return `plus-${PLUS_COUNTER}`; }
+
+        function applyEditDesign() {
+    const editData = sessionStorage.getItem('domogenie_editDesignData');
+    if (!editData) return;
+
+    const d = JSON.parse(editData);
+
+    isEditMode = true;
+
+    // 1️⃣ Select model (this creates variants & preview)
+    selectModel(d.selectedModel);
+
+    // 2️⃣ Select variant AFTER thumbs are created
+    setTimeout(() => {
+        const thumbs = document.querySelectorAll('.thumb');
+        if (thumbs[d.selectedVariantIndex]) {
+            thumbs[d.selectedVariantIndex].click();
+        }
+
+        // 3️⃣ Restore icons
+        selectedIcons = d.selectedIcons || {};
+
+        // 4️⃣ Re-render preview with icons
+        renderVariantPreview();
+
+        // 5️⃣ Go to Step 2
+        navigateToStep(2);
+    }, 0);
+}
+
+
+        function nextSectionId(modelId) {
+            SECTION_COUNTER++;
+            return `sec-${modelId}-${SECTION_COUNTER}`;
+        }
+
+        function nextPlusId() {
+            PLUS_COUNTER++;
+            return `plus-${PLUS_COUNTER}`;
+        }
 
         /* ======= HELPERS ======= */
         function buildKey(model, variantIndex, rowIndex, colIndex, sectionType, position) {
@@ -1487,14 +1557,199 @@
 
         /* ======= INIT ======= */
         document.addEventListener('DOMContentLoaded', () => {
+            // Check for edit mode
+
             initializeModelSelection();
             setupEventListeners();
-            renderThumbs();
+            renderThumbs();  // This should now work properly
             initializeImageModals();
             initializeCustomizationOptions();
+
+            // Initial render
+            renderVariantPreview();
+     applyEditDesign();
+});
+
+        // Add this function after the INIT section:
+        function checkEditMode() {
+            const editData = sessionStorage.getItem('domogenie_editDesignData');
+            if (editData) {
+                try {
+                    editDesignData = JSON.parse(editData);
+                    isEditMode = true;
+                    console.log('Edit mode activated:', editDesignData);
+
+                    // Load the design configuration
+                    loadDesignConfiguration(editDesignData);
+
+                    // Start at Step 1 but auto-select the model
+                    setTimeout(() => {
+                        selectModel(editDesignData.selectedModel);
+
+                        // Then after model loads, select variant and navigate to Step 2
+                        setTimeout(() => {
+                            selectVariantAndNavigateToStep2();
+                        }, 300);
+                    }, 100);
+                } catch (error) {
+                    console.error('Error loading edit data:', error);
+                    isEditMode = false;
+                }
+            }
+        }
+
+        // Add this new function to select variant and navigate to Step 2:
+        function selectVariantAndNavigateToStep2() {
+            // Select the variant
+            const variantThumbs = document.querySelectorAll('.thumb');
+            if (variantThumbs.length > selectedVariantIndex) {
+                variantThumbs[selectedVariantIndex].click();
+            }
+
+            // Render the preview with saved icons
+            renderVariantPreview();
+
+            // Navigate to Step 2
+            navigateToStep(2);
+
+            // Apply saved icons after a short delay
+        }
+
+function loadDesignConfiguration(design) {
+    console.log('Loading design configuration:', design);
+
+    // 🔒 Mark edit mode
+    isEditMode = true;
+
+    // ✅ Restore state safely
+    selectedModel = design.selectedModel;
+
+    selectedVariantIndex = Number.isInteger(design.selectedVariantIndex)
+        ? design.selectedVariantIndex
+        : 0;
+
+    selectedGlassColor = design.selectedGlassColor || 'white';
+    selectedFrameColor = design.selectedFrameColor || 'black';
+    selectedIcons = design.selectedIcons || {};
+
+    // 📝 Update page title
+    const titleElement = document.querySelector('h1');
+    if (titleElement && design.designLabel) {
+        titleElement.innerHTML = `Edit Design: <span style="color: var(--primary);">${design.designLabel}</span>`;
+    }
+
+    // 🎨 Update glass color UI
+    document.querySelectorAll('[data-option="glass"]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.value === selectedGlassColor);
+    });
+
+    // 🖼️ Update frame color UI
+    document.querySelectorAll('[data-option="frame"]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.value === selectedFrameColor);
+    });
+
+    // ❌ Cancel edit button (attach ONCE)
+    const cancelBtn = document.getElementById('cancelEditBtn');
+    if (cancelBtn) {
+        cancelBtn.style.display = 'flex';
+
+        cancelBtn.onclick = () => {
+            if (confirm('Cancel editing? All unsaved changes will be lost.')) {
+                sessionStorage.removeItem('domogenie_editDesignData');
+                window.location.href = 'domogenie-designs.html';
+            }
+        };
+    }
+}
+
+function applySavedIconsToPreview() {
+    console.log('Applying saved icons:', selectedIcons);
+
+    const previews = [
+        document.getElementById('variantPreview'),
+        document.getElementById('finalPreview')
+    ];
+
+    previews.forEach(preview => {
+        if (!preview) return;
+
+        // Reset all plus buttons
+        preview.querySelectorAll('.plus').forEach(plus => {
+            plus.classList.remove('selected');
+            plus.textContent = '+';
+            plus.style.padding = '';
+            plus.innerHTML = '+';
         });
 
-        /* ======= UI INITIALIZERS ======= */
+        Object.entries(selectedIcons).forEach(([key, iconUrl]) => {
+            try {
+                // SAFELY PARSE KEY
+                // model-variantIndex-rX-cY-sectionType-position
+                const match = key.match(
+                    /^(.+?)-(\d+)-r(\d+)-c(\d+)-(.+?)-(.+)$/
+                );
+
+                if (!match) return;
+
+                const [
+                    ,
+                    model,
+                    variantIndex,
+                    row,
+                    col,
+                    sectionType,
+                    position
+                ] = match;
+
+                // 🔒 Apply only to current model & variant
+                if (
+                    model !== selectedModel ||
+                    Number(variantIndex) !== selectedVariantIndex
+                ) {
+                    return;
+                }
+
+                const section = preview.querySelector(
+                    `.section[data-row="${row}"][data-col="${col}"]`
+                );
+                if (!section) return;
+
+                let plus = null;
+
+                // GRID (2.5 / 2.5 special)
+                if (sectionType.includes('two-point-five')) {
+                    plus =
+                        section.querySelector(`.plus[data-position="${position}"]`) ||
+                        section.querySelector(`.plus[data-index="${position}"]`);
+                } else {
+                    // NORMAL / SPECIAL / LIGHT / HALF
+                    plus = section.querySelector(`.plus[data-position="${position}"]`);
+                }
+
+                if (!plus) return;
+
+                // APPLY ICON
+                plus.classList.add('selected');
+                plus.style.padding = '0';
+                plus.innerHTML = `<img src="${iconUrl}" alt="Icon">`;
+
+                // 🔁 Arrow flip (bottom arrows)
+                if (
+                    plus.dataset.type === 'arrow' &&
+                    ['br', 'bottom', '9', '10'].includes(position)
+                ) {
+                    const img = plus.querySelector('img');
+                    if (img) img.style.transform = 'scaleY(-1)';
+                }
+
+            } catch (err) {
+                console.error('Error applying icon:', key, err);
+            }
+        });
+    });
+} 
+
+/* ======= UI INITIALIZERS ======= */
         function initializeModelSelection() {
             const modelButtons = document.getElementById('modelButtons');
             modelButtons.innerHTML = '';
@@ -1508,6 +1763,7 @@
             });
             selectModel(selectedModel);
         }
+
         // ======= CONFIRMATION BEFORE RESET =======
         function confirmResetIfNeeded(actionCallback) {
             if (Object.keys(selectedIcons).length > 0) {
@@ -1548,7 +1804,7 @@
                 const imgItem = document.createElement('div');
                 imgItem.className = 'image-item';
                 imgItem.dataset.url = url;
-                imgItem.innerHTML = `<img src="${url}" alt="Icon ${index + 1}">`;
+                imgItem.innerHTML = `<img src="${url}" alt="Icon ${index + 1}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjZjBmNWZmIi8+Cjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiMyYTViZDciIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIwLjNlbSI+SWNvbiB7aW5kZXgrMX08L3RleHQ+Cjwvc3ZnPg==';this.alt='Placeholder Icon ${index + 1}';">`;
                 imgItem.addEventListener('click', () => selectImageInModal(imgItem, url));
                 commonImagesContainer.appendChild(imgItem);
             });
@@ -1560,7 +1816,7 @@
                 const imgItem = document.createElement('div');
                 imgItem.className = 'image-item';
                 imgItem.dataset.url = url;
-                imgItem.innerHTML = `<img src="${url}" alt="Arrow ${index + 1}">`;
+                imgItem.innerHTML = `<img src="${url}" alt="Arrow ${index + 1}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjZjBmNWZmIi8+CjxwYXRoIGQ9Ik01MCAzMEw3MCA1MEw1MCA3MEwzMCA1MEw1MCAzMFoiIGZpbGw9IiMyYTViZDciLz4KPC9zdmc+';this.alt='Placeholder Arrow ${index + 1}';">`;
                 imgItem.addEventListener('click', () => selectImageInModal(imgItem, url));
                 arrowImagesContainer.appendChild(imgItem);
             });
@@ -1572,7 +1828,7 @@
                 const imgItem = document.createElement('div');
                 imgItem.className = 'image-item';
                 imgItem.dataset.url = url;
-                imgItem.innerHTML = `<img src="${url}" alt="Fan ${index + 1}">`;
+                imgItem.innerHTML = `<img src="${url}" alt="Fan ${index + 1}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjZjBmNWZmIi8+CjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjMwIiBmaWxsPSIjMmE1YmQ3Ii8+Cjwvc3ZnPg==';this.alt='Placeholder Fan ${index + 1}';">`;
                 imgItem.addEventListener('click', () => selectImageInModal(imgItem, url));
                 fanImagesContainer.appendChild(imgItem);
             });
@@ -1584,7 +1840,7 @@
                 const imgItem = document.createElement('div');
                 imgItem.className = 'image-item';
                 imgItem.dataset.url = url;
-                imgItem.innerHTML = `<img src="${url}" alt="Light ${index + 1}">`;
+                imgItem.innerHTML = `<img src="${url}" alt="Light ${index + 1}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjZjBmNWZmIi8+CjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjMwIiBmaWxsPSIjZmZiYjAwIi8+Cjwvc3ZnPg==';this.alt='Placeholder Light ${index + 1}';">`;
                 imgItem.addEventListener('click', () => selectImageInModal(imgItem, url));
                 lightImagesContainer.appendChild(imgItem);
             });
@@ -1615,23 +1871,38 @@
         }
 
         /* ======= MODEL / VARIANT RENDERING ======= */
-        function selectModel(m) {
-            confirmResetIfNeeded(() => {
-                selectedIcons = {};
-                selectedModel = m;
-                selectedVariantIndex = 0;
-                document.querySelectorAll('.model-btn').forEach(b => b.classList.toggle('active', b.dataset.model === m));
-                renderThumbs();
-                renderVariantPreview();
-            });
+function selectModel(m) {
+    confirmResetIfNeeded(() => {
+
+        if (!isEditMode) {
+            selectedIcons = {};
+            selectedVariantIndex = 0;
         }
+
+        selectedModel = m;
+        renderThumbs();
+        renderVariantPreview();
+    });
+}
+
 
 
 
         function renderThumbs() {
             const thumbs = document.getElementById('variantThumbs');
+            if (!thumbs) {
+                console.error('variantThumbs element not found!');
+                return;
+            }
+
             thumbs.innerHTML = '';
-            const variants = MODELS[selectedModel].variants;
+            const variants = MODELS[selectedModel]?.variants || [];
+
+            if (variants.length === 0) {
+                console.error('No variants found for model:', selectedModel);
+                return;
+            }
+
             variants.forEach((v, idx) => {
                 const d = document.createElement('div');
                 d.className = 'thumb' + (idx === selectedVariantIndex ? ' active' : '');
@@ -1639,10 +1910,9 @@
                 d.innerHTML = `<div>${v.label}</div>`;
 
                 d.addEventListener('click', () => {
-                    // ✅ Ask confirmation before changing type if icons are selected
                     confirmResetIfNeeded(() => {
                         selectedVariantIndex = idx;
-                        renderThumbs();
+                        renderThumbs();  // Re-render thumbs to update active state
                         renderVariantPreview();
                         if (currentStep >= 3) renderFinalPreview();
                     });
@@ -1652,15 +1922,28 @@
             });
         }
 
-
         function renderVariantPreview() {
             PLUS_COUNTER = 0;
             SECTION_COUNTER = 0;
 
             const preview = document.getElementById('variantPreview');
+            if (!preview) {
+                console.error('variantPreview element not found!');
+                return;
+            }
+
             preview.innerHTML = '';
             const modelDef = MODELS[selectedModel];
-            const layout = modelDef.variants[selectedVariantIndex].layout;
+            if (!modelDef) {
+                console.error('Model definition not found for:', selectedModel);
+                return;
+            }
+
+            const layout = modelDef.variants[selectedVariantIndex]?.layout;
+            if (!layout) {
+                console.error('Layout not found for variant:', selectedVariantIndex);
+                return;
+            }
 
             layout.forEach((rowDef, rowIndex) => {
                 const row = document.createElement('div');
@@ -1673,8 +1956,12 @@
                 preview.appendChild(row);
             });
 
-            // 🧩 Restore selected icons after re-rendering
+            // Always restore selected icons
             persistSelectedIcons(preview);
+            if (isEditMode) {
+    persistSelectedIcons(document.getElementById('variantPreview'));
+}
+
         }
 
         function renderFinalPreview() {
@@ -1697,7 +1984,12 @@
                 preview.appendChild(row);
             });
 
+            // Always restore selected icons
             persistSelectedIcons(preview);
+            if (isEditMode) {
+    persistSelectedIcons(document.getElementById('finalPreview'));
+}
+
         }
 
         /* ======= SECTION CREATION ======= */
@@ -1846,7 +2138,13 @@
                 p1.dataset.type = 'common';
                 p1.dataset.position = 'top';
                 const key1 = getIconKey('top');
-                if (selectedIcons[key1]) { p1.classList.add('selected'); p1.style.padding = '0'; p1.innerHTML = `<img src="${selectedIcons[key1]}" alt="Selected Icon">`; } else p1.textContent = '+';
+                if (selectedIcons[key1]) {
+                    p1.classList.add('selected');
+                    p1.style.padding = '0';
+                    p1.innerHTML = `<img src="${selectedIcons[key1]}" alt="Selected Icon">`;
+                } else {
+                    p1.textContent = '+';
+                }
 
                 const p2 = document.createElement('div');
                 p2.className = 'plus';
@@ -1854,7 +2152,13 @@
                 p2.dataset.type = 'common';
                 p2.dataset.position = 'bottom';
                 const key2 = getIconKey('bottom');
-                if (selectedIcons[key2]) { p2.classList.add('selected'); p2.style.padding = '0'; p2.innerHTML = `<img src="${selectedIcons[key2]}" alt="Selected Icon">`; } else p2.textContent = '+';
+                if (selectedIcons[key2]) {
+                    p2.classList.add('selected');
+                    p2.style.padding = '0';
+                    p2.innerHTML = `<img src="${selectedIcons[key2]}" alt="Selected Icon">`;
+                } else {
+                    p2.textContent = '+';
+                }
 
                 col.appendChild(p1);
                 col.appendChild(p2);
@@ -1880,7 +2184,7 @@
                     p.className = 'plus';
                     p.id = pid;
 
-                    // ✅ Only two-point-five-special gets arrows in 1st-row-5th (4) and 2nd-row-5th (9)
+                    // Only two-point-five-special gets arrows in 1st-row-5th (4) and 2nd-row-5th (9)
                     if (type === 'two-point-five-special' && (i === 4 || i === 9)) {
                         p.dataset.type = 'arrow';
                     } else {
@@ -1905,7 +2209,6 @@
 
                     s.appendChild(p);
                 }
-
 
                 if (type === 'two-point-five-special') {
                     const centerBtn = document.createElement('div');
@@ -1949,7 +2252,9 @@
                 const section = plus.closest('.section');
                 const row = parseInt(section.dataset.row || 0, 10);
                 const col = parseInt(section.dataset.col || 0, 10);
-                const typeClass = section.className.split(' ').slice(-1)[0];
+                const typeClass = [...section.classList]
+    .find(c => !['section', 'model-2', 'model-4', 'model-6', 'model-8', 'model-12'].includes(c));
+
                 const position = plus.dataset.position ?? plus.dataset.index;
                 const key = buildKey(selectedModel, selectedVariantIndex, row, col, typeClass, position);
                 if (selectedIcons[key]) {
@@ -2007,8 +2312,6 @@
             // Instantly confirm and update preview
             confirmIconSelection(type);
         }
-
-
 
         function confirmIconSelection(type) {
             if (!currentPlusElement) {
@@ -2126,14 +2429,25 @@
 
         /* ======= SAVE DESIGN FUNCTIONALITY ======= */
         function saveDesign() {
+            // Ask for design name if not in edit mode
+            let designLabel = '';
+
+            if (!isEditMode) {
+                designLabel = prompt('Enter a name for your design:', `Design ${new Date().toLocaleString()}`);
+                if (designLabel === null) return; // User cancelled
+            } else {
+                designLabel = editDesignData.designLabel || `Edited Design ${new Date().toLocaleString()}`;
+            }
+
             const designData = {
-                id: 'domogenie_design_' + Date.now(),
+                id: isEditMode ? editDesignData.id : 'domogenie_design_' + Date.now(),
                 selectedModel: selectedModel,
                 selectedVariantIndex: selectedVariantIndex,
                 selectedVariantName: MODELS[selectedModel].variants[selectedVariantIndex].label,
                 selectedGlassColor: selectedGlassColor,
                 selectedFrameColor: selectedFrameColor,
                 selectedIcons: { ...selectedIcons },
+                designLabel: designLabel,
                 timestamp: new Date().toISOString(),
                 fileName: getFormattedDateTime(),
                 previewHTML: document.getElementById('finalPreview').outerHTML
@@ -2141,10 +2455,34 @@
 
             // Save to localStorage
             let designs = JSON.parse(localStorage.getItem('domogenieDesigns') || '[]');
-            designs.push(designData);
+
+            if (isEditMode) {
+                // Update existing design
+                const index = designs.findIndex(d => d.id === editDesignData.id);
+                if (index !== -1) {
+                    designs[index] = designData;
+                    alert('✅ Design updated successfully!');
+                } else {
+                    designs.push(designData);
+                    alert('✅ Design saved as new!');
+                }
+            } else {
+                // Add new design
+                designs.push(designData);
+                alert('✅ Design saved successfully!');
+            }
+
             localStorage.setItem('domogenieDesigns', JSON.stringify(designs));
 
-            alert('✅ Design saved successfully! You can view it in the Designs section.');
+            // Clear edit mode and redirect
+            if (isEditMode) {
+                sessionStorage.removeItem('domogenie_editDesignData');
+            }
+
+            // Redirect to designs page
+            setTimeout(() => {
+                window.location.href = 'domogenie-designs.html';
+            }, 1000);
         }
 
         function getFormattedDateTime() {
@@ -2168,24 +2506,7 @@
             return totalPluses > 0 && totalPluses === filledPluses;
         }
 
-        // ======= CONFIRMATION BEFORE RESET =======
-        function confirmResetIfNeeded(actionCallback) {
-            if (Object.keys(selectedIcons).length > 0) {
-                const confirmReset = confirm("⚠️ Changing this will reset your current selections. Continue?");
-                if (confirmReset) {
-                    selectedIcons = {}; // clear icons
-                    actionCallback();   // proceed
-                }
-                // if canceled, do nothing
-            } else {
-                actionCallback(); // no selections, just proceed
-            }
-        }
-
-
-
-
-        // Lumi Configurator - Page Access Guard
+        // Authentication check
         document.addEventListener("DOMContentLoaded", () => {
             const isAuthenticated = sessionStorage.getItem("lumi_authenticated");
             const userData = sessionStorage.getItem("lumi_user");
@@ -2208,7 +2529,14 @@
             }
         });
 
-
+        // Logout functionality
+        document.getElementById("logout-btn").addEventListener("click", () => {
+            sessionStorage.clear();
+            localStorage.removeItem("lumi_authenticated");
+            localStorage.removeItem("lumi_user");
+            alert("You have been logged out successfully.");
+            window.location.href = "login.html";
+        });
     </script>
     <script>
         document.getElementById("logout-btn").addEventListener("click", () => {

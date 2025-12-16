@@ -8,6 +8,21 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        .editBtn {
+    background: #3b82f6;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin-right: 10px;
+}
+
+.editBtn:hover {
+    background: #2563eb;
+}
         :root {
             --primary: #2a5bd7;
             --primary-dark: #1a3a8f;
@@ -613,6 +628,319 @@
     border-radius: 8px;
 }
 
+
+
+/* Design Grid - Full width cards with max 2 columns */
+.design-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+    width: 100%;
+}
+
+/* Each design card takes full width of its grid cell */
+.design-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    border: 1px solid #e2e8f0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Summary container expands to full width */
+.summary-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    margin-top: 20px;
+    position: relative;
+    width: 100%;
+}
+
+/* Make preview and details sections wider */
+.summary-preview,
+.summary-details {
+    flex: 1;
+    min-width: 45%; /* Increased from 300px */
+}
+
+/* Preview box scales better */
+.preview-box {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-radius: 12px;
+    border: 1.5px solid black;
+    padding: 20px;
+    transform: scale(0.9); /* Slightly larger scale */
+    transform-origin: center;
+    box-sizing: border-box;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1100px) {
+    .design-grid {
+        grid-template-columns: 1fr; /* Single column on smaller screens */
+    }
+    
+    .summary-preview,
+    .summary-details {
+        min-width: 100%; /* Stack vertically on smaller screens */
+    }
+    
+    .preview-box {
+        transform: scale(0.85);
+    }
+}
+
+@media (max-width: 768px) {
+    .design-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .summary-container {
+        flex-direction: column;
+    }
+    
+    .preview-box {
+        transform: scale(0.75);
+    }
+}
+
+@media (max-width: 480px) {
+    .design-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .preview-box {
+        transform: scale(0.65);
+    }
+    
+    .design-card {
+        padding: 16px;
+    }
+}
+
+/* Summary container - Stack vertically */
+.summary-container {
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    gap: 30px;
+    margin-top: 20px;
+    position: relative;
+    width: 100%;
+}
+
+/* Preview section */
+.summary-preview {
+    width: 100%;
+}
+
+/* Details section - Always comes after preview */
+.summary-details {
+    width: 100%;
+    margin-top: 20px;
+}
+
+/* Table takes full width */
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+/* Preview box adjustments */
+.preview-box {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-radius: 12px;
+    border: 1.5px solid black;
+    padding: 20px;
+    transform: scale(0.9);
+    transform-origin: center;
+    box-sizing: border-box;
+}
+
+/* Header styles */
+.summary-preview h4,
+.summary-details h4 {
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    font-size: 1.2rem;
+    text-align: center;
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 8px;
+    width: 100%;
+}
+
+/* Remove flex-wrap since we're stacking */
+.summary-container {
+    flex-wrap: nowrap;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .preview-box {
+        transform: scale(0.75);
+    }
+}
+
+@media (max-width: 480px) {
+    .preview-box {
+        transform: scale(0.65);
+    }
+    
+    .summary-table th,
+    .summary-table td {
+        padding: 8px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Watermark positioning adjustments */
+.watermark {
+    position: absolute;
+    font-size: 60px;
+    font-weight: bold;
+    color: rgba(30, 58, 95, 0.1);
+    z-index: -1;
+    pointer-events: none;
+    transform: rotate(-45deg);
+}
+
+.watermark-1 {
+    top: 10%;
+    left: 10%;
+}
+
+.watermark-2 {
+    top: 40%;
+    left: 60%;
+}
+
+.watermark-3 {
+    top: 70%;
+    left: 20%;
+}
+
+/* Preview Box - Fit content, not full width */
+.preview-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.preview-box {
+    width: fit-content; /* Changed from 100% */
+    max-width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-radius: 12px;
+    border: 1.5px solid black;
+    padding: 20px;
+    transform: scale(0.9);
+    transform-origin: center;
+    box-sizing: border-box;
+    background-color: white;
+}
+
+/* Make sure preview section content is centered */
+.summary-preview {
+    width: 100%;
+    text-align: center;
+}
+
+/* Scale adjustments for responsive */
+@media (max-width: 1100px) {
+    .preview-box {
+        transform: scale(0.85);
+    }
+}
+
+@media (max-width: 768px) {
+    .preview-box {
+        transform: scale(0.75);
+    }
+}
+
+@media (max-width: 480px) {
+    .preview-box {
+        transform: scale(0.65);
+        padding: 15px;
+    }
+}
+
+/* Ensure model box inside preview maintains proper layout */
+.preview-box .model-box {
+    width: fit-content;
+    margin: 0 auto;
+}
+
+/* Adjust sections inside preview to fit content */
+.preview-box .section {
+    flex-shrink: 0; /* Prevent shrinking */
+}
+
+/* For 2.5 special layout - ensure proper sizing */
+.preview-box .section.two-point-five-special {
+    min-width: 360px !important; /* Keep consistent width */
+}
+
+.preview-box .section.two-point-five {
+    min-width: 384px !important; /* Keep consistent width */
+}
+
+/* Make sure images display properly */
+.preview-box .section.image {
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* Configuration Details table styling */
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    table-layout: fixed; /* Consistent column widths */
+}
+
+.summary-table th,
+.summary-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+.summary-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    width: 40%;
+}
+
+.summary-table td:first-child {
+    font-weight: 600;
+    color: #495057;
+    width: 40%;
+}
+
+.summary-table td:last-child {
+    width: 60%;
+    word-break: break-word;
+}
     </style>
 </head>
 
@@ -815,6 +1143,77 @@
                 window.location.href = "login.html";
             }
         });
+// ================= EDIT BUTTON FUNCTIONALITY (FIXED) =================
+
+// Add Edit button functionality
+function setupEditButtons() {
+    const designCards = document.querySelectorAll('.design-card');
+
+    designCards.forEach((card, index) => {
+        const actions = card.querySelector('.actions');
+        if (!actions) return;
+
+        // Avoid duplicate edit buttons
+        if (actions.querySelector('.editBtn')) return;
+
+        // Create Edit button
+        const editBtn = document.createElement('button');
+        editBtn.className = 'editBtn';
+        editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit Design';
+
+        editBtn.style.cssText = `
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        `;
+
+        editBtn.onmouseover = () => editBtn.style.backgroundColor = '#2563eb';
+        editBtn.onmouseout  = () => editBtn.style.backgroundColor = '#3b82f6';
+
+        // Attach correct design data by index
+        editBtn.addEventListener('click', () => editDesignByIndex(index));
+
+        // Insert Edit button before Delete button
+        const deleteBtn = actions.querySelector('.deleteBtn');
+        if (deleteBtn) {
+            actions.insertBefore(editBtn, deleteBtn);
+        } else {
+            actions.appendChild(editBtn);
+        }
+    });
+}
+
+// Edit handler using array index (SAFE)
+function editDesignByIndex(index) {
+    const allDesigns = JSON.parse(localStorage.getItem('domogenieDesigns') || '[]');
+    const designToEdit = allDesigns[index];
+
+    if (!designToEdit) {
+        alert('Design not found!');
+        return;
+    }
+
+    // Store edit data for index.html
+    sessionStorage.setItem(
+        'domogenie_editDesignData',
+        JSON.stringify(designToEdit)
+    );
+
+    // Redirect to configurator
+    window.location.href = 'index.html';
+}
+
+// Initialize edit buttons when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    // Wait until cards are rendered
+    setTimeout(setupEditButtons, 100);
+});
 
     </script>
 </body>
